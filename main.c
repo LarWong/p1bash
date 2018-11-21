@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include<sys/wait.h> 
 
 void pary(char ** strings){
   for (int x = 0; strings[x]; x++){
@@ -8,18 +10,53 @@ void pary(char ** strings){
   }
 }
 
-string * toString(string ** args){
+char * toString(char ** args){
   char * ret_str = malloc(99999*sizeof(char));
-  for (int x = 0; strings[x]; x++){
-    strcat(ret_str, 
+  for (int x = 0; args[x]; x++){
+    strcat(ret_str, args[x]);
   }
+
+  return ret_str;
 }
 
-int main(int argc, char * argv[]){
-  char** strings = malloc(sizeof(char*) * 9999);
-  memcpy(strings, &argv[1], (argc-1) * sizeof(char *));
-  pary(strings);
-  printf("done\n");
+int contains(char * str, char * sub){
+  int sublen = strlen(sub);
+  int strleng = strlen(str);
+  for (int x = 0; x < strleng - sublen + 1; x++){
+    int state_var = 1;
+    for (int y = 0; y < sublen; y++){
+      if (str[x+y] != sub[y]){
+	state_var = 0;
+      }
+    }
+    if (state_var) return 1;
+  }
   return 0;
 }
 
+int main(int argc, char * argv[]){
+  pid_t wpid= 0;
+  int status = 0;
+  char** strings = malloc(sizeof(char*) * 9999);
+  memcpy(strings, &argv[1], (argc-1) * sizeof(char *));
+  char * str_args = toString(strings);
+  //printf("%s\n", str_args);
+  while(str_args){
+    char * trunc_args = strsep(&str_args, ";");
+    if (contains(trunc_args," cd ")){
+      printf("the adult here: %s\n", trunc_args);
+    }
+    else{
+      int child = fork();
+      if (!child){
+	printf("the child here: %s\n", trunc_args);
+
+	exit(0);
+      }
+      while ((wpid = wait(&status)) > 0);
+    }
+  }
+  while ((wpid = wait(&status)) > 0);
+  printf("done\n");
+  return 0;
+}

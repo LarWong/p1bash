@@ -19,23 +19,21 @@ char ** parse_args(char *line){
   return arr;
 }
 
+void pary(char ** strings){
+  for (int x = 0; strings[x]; x++){
+    printf("%s\n", strings[x]);
+  }
+}
+
+
 int main(){
   signal(SIGINT,sig);
   char *input = malloc(9000);
-  
   while(1){
-
     printf("\n->");
     scanf("%s",input);
     char ** args = parse_args(input);
-
+    pary(args);
   }
-
-
-
-
-
-
-
   return 0;
 }
