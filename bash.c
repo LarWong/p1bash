@@ -5,6 +5,8 @@
 #include<fcntl.h>
 #include<limits.h>
 #include<string.h>
+#include<sys/wait.h>
+#include<errno.h>
 
 static void sig(int signo){
     if (signo == SIGINT){
@@ -19,21 +21,44 @@ char ** parse_args(char *line){
   return arr;
 }
 
-void pary(char ** strings){
-  for (int x = 0; strings[x]; x++){
-    printf("%s\n", strings[x]);
-  }
-}
-
-
 int main(){
   signal(SIGINT,sig);
-  char *input = malloc(9000);
+  int status;
+  char * input = malloc(9000);
+  
   while(1){
-    printf("\n->");
-    scanf("%s",input);
+
+    char cwd[PATH_MAX];
+    getcwd(cwd,PATH_MAX);
+    
+    printf("%s$ ",cwd);
+    scanf("%[^\n]%*c",input);
     char ** args = parse_args(input);
-    pary(args);
+
+    if (!strcmp(args[0],"exit")){
+      exit(0);
+    }
+    if (!strcmp(args[0],"cd")){
+      if (args[2] == NULL){
+	chdir(args[1]);
+      }else{
+	printf("cd: Too many args\n");
+      }
+    }
+    
+    
+    int child = fork();
+    if (child){
+      int w = wait(&status);
+    }else{
+      if (execvp(args[0],args) == -1){
+	printf("%s: %s\n",args[0],strerror(errno));
+      }
+      exit(0);
+    }
+
   }
+
+
   return 0;
 }
