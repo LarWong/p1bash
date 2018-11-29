@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include<sys/wait.h> 
+#include<sys/wait.h>
+#include <limits.h>
 
 void pary(char ** strings){
   for (int x = 0; strings[x]; x++){
@@ -83,33 +84,44 @@ int sizeary(char ** x){
   return i;
 }
 
+str * removews(
+
 int main(int argc, char * argv[]){
-  pid_t wpid= 0;
-  int status = 0;
-  char** strings = malloc(sizeof(char*) * 9999);
-  memcpy(strings, &argv[1], (argc-1) * sizeof(char *));
-  char * str_args = toString(strings);
-  //printf("%s\n", str_args);
-  while(str_args){
-    char * trunc_args = strsep(&str_args, ";");
-    if (!isEmpty(trunc_args)){
-      trunc_args = strip(trunc_args);
-      char ** trunc_ary;
-      // wiill make switch soon
+  while (1){
+    pid_t wpid= 0;
+    int status = 0;
+    char * str_args = calloc(sizeof(char), 9999);
+    //char** strings = malloc(sizeof(char*) * 9999);
+    //printf("%p\n",str_args);
+    char cwd[PATH_MAX];
+    getcwd(cwd,PATH_MAX);
+    printf("%s$ ",cwd);
+    fgets(str_args, 9999 + 1, stdin);
+    //memcpy(strings, &argv[1], (argc-1) * sizeof(char *));
+    //char * str_args = toString(strings);
+    //printf("%s\n", str_args);
+    str_args[strcspn(str_args, "\n")] = '\0';
+    while(str_args){
+      char * trunc_args = strsep(&str_args, ";");
+      if (!isEmpty(trunc_args)){
+	//printf("how doing this:%s\n",trunc_args);
+	trunc_args = strip(trunc_args);
+	char ** trunc_ary;
+	// wiill make switch soon
 	if (contains(trunc_args, "cd")){
-	  printf("the adult here:%s\n", trunc_args);
+	  //printf("the adult here:%s\n", trunc_args);
 	  trunc_ary = toAry(trunc_args);
 	  //printf("cd test result: %d\n", sizeary(trunc_ary));
 	  if (strcmp(trunc_ary[0], "cd") == 0 && sizeary(trunc_ary) > 1){
 	    //printf("running\n");
-	    printf("cding to %s\n", trunc_ary[1]);
+	    //printf("cding to %s\n", trunc_ary[1]);
 	    chdir(trunc_ary[1]);
 	  }
 	}
 	else{
 	  int child = fork();
 	  if (!child){
-	    printf("the child here:%s\n", trunc_args);
+	    //printf("the child here:%s\n", trunc_args);
 	    trunc_ary = toAry(trunc_args);
 	    execvp(trunc_ary[0], trunc_ary);
 	    return(0);
@@ -117,8 +129,9 @@ int main(int argc, char * argv[]){
 	  while ((wpid = wait(&status)) > 0);
 	}
       }
+    }
+    while ((wpid = wait(&status)) > 0);
   }
-  while ((wpid = wait(&status)) > 0);
   printf("done\n");
-  return 0;
+   return 0;
 }
