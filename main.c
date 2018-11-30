@@ -76,6 +76,22 @@ int contains(char * str, char * sub){
   return 0;
 }
 
+int help(char ** ary, char * hey){
+  for (int i = 0; ary[i]; i++){
+    if (strcmp(ary[i], hey) == 0){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int contains_ary(char ** ary, char ** hey){
+  int state = 0;
+  for (int i = 0; hey[i];i++){
+    state|=help(ary, hey[i]);
+  }
+}
+
 int sizeary(char ** x){
   int i = 0;
   while (*(x++)){
@@ -84,45 +100,117 @@ int sizeary(char ** x){
   return i;
 }
 
-str * removews(
+char *str_replace( char *s, const char *oldW, 
+                                 const char *newW) 
+{ 
+  char * result = malloc(sizeof(char) * 9999); 
+    int i, cnt = 0; 
+    int newWlen = strlen(newW); 
+    int oldWlen = strlen(oldW); 
+  
+    // Counting the number of times old word 
+    // occur in the string 
+    for (i = 0; s[i] != '\0'; i++) 
+    { 
+        if (strstr(&s[i], oldW) == &s[i]) 
+        { 
+            cnt++; 
+  
+            // Jumping to index after the old word. 
+            i += oldWlen - 1; 
+        } 
+    } 
+  
+    // Making new string of enough length 
+    result = (char *)malloc(i + cnt * (newWlen - oldWlen) + 1); 
+  
+    i = 0; 
+    while (*s) 
+    { 
+        // compare the substring with the result 
+        if (strstr(s, oldW) == s) 
+        { 
+            strcpy(&result[i], newW); 
+            i += newWlen; 
+            s += oldWlen;
+        } 
+        else
+            result[i++] = *s++; 
+    } 
+  
+    result[i] = '\0'; 
+    return result; 
+} 
+
+char * remove_consec_ws(char * x){
+  char * new_str = malloc(sizeof(char) * 9999);
+  strcpy(new_str, x);
+  while(contains(new_str, "  ")){
+    new_str = str_replace(new_str, "  ", " ");
+  }
+  return new_str;
+}
 
 int main(int argc, char * argv[]){
+  //printf("hello\n");
   while (1){
     pid_t wpid= 0;
     int status = 0;
     char * str_args = calloc(sizeof(char), 9999);
-    //char** strings = malloc(sizeof(char*) * 9999);
-    //printf("%p\n",str_args);
     char cwd[PATH_MAX];
     getcwd(cwd,PATH_MAX);
     printf("%s$ ",cwd);
     fgets(str_args, 9999 + 1, stdin);
-    //memcpy(strings, &argv[1], (argc-1) * sizeof(char *));
-    //char * str_args = toString(strings);
-    //printf("%s\n", str_args);
+    str_args = remove_consec_ws(str_args);
     str_args[strcspn(str_args, "\n")] = '\0';
     while(str_args){
       char * trunc_args = strsep(&str_args, ";");
       if (!isEmpty(trunc_args)){
-	//printf("how doing this:%s\n",trunc_args);
 	trunc_args = strip(trunc_args);
 	char ** trunc_ary;
-	// wiill make switch soon
-	if (contains(trunc_args, "cd")){
-	  //printf("the adult here:%s\n", trunc_args);
-	  trunc_ary = toAry(trunc_args);
-	  //printf("cd test result: %d\n", sizeary(trunc_ary));
+	char ** filters = malloc(sizeof(char*) * 999);
+
+	//add more filters here
+	filters[0] = "cd";
+	filters[1] = "|";
+	filters[2] = ">";
+	filters[3] = ">>";
+	filters[4] = "2>";
+	filters[5] = "<";
+	filters[6] = "<<";
+	filters[7] = "2<";
+	
+	trunc_ary = toAry(trunc_args);
+	if (contains_ary(trunc_ary, filters)){
+	  //add more cases here
 	  if (strcmp(trunc_ary[0], "cd") == 0 && sizeary(trunc_ary) > 1){
-	    //printf("running\n");
-	    //printf("cding to %s\n", trunc_ary[1]);
 	    chdir(trunc_ary[1]);
+	  }
+	  if (strcmp(trunc_ary[0], "|") == 0 && sizeary(trunc_ary) > 2){
+	    
+	  }
+	  if (strcmp(trunc_ary[0], ">") == 0 && sizeary(trunc_ary) > 2){
+	    
+	  }
+	  if (strcmp(trunc_ary[0], ">>") == 0 && sizeary(trunc_ary) > 2){
+	    
+	  }
+	  if (strcmp(trunc_ary[0], "2>") == 0 && sizeary(trunc_ary) > 2){
+	    
+	  }
+	  if (strcmp(trunc_ary[0], "<") == 0 && sizeary(trunc_ary) > 2){
+	    
+	  }
+	  if (strcmp(trunc_ary[0], "<<") == 0 && sizeary(trunc_ary) > 2){
+	    
+	  }
+	  if (strcmp(trunc_ary[0], "2<") == 0 && sizeary(trunc_ary) > 2){
+	    
 	  }
 	}
 	else{
 	  int child = fork();
 	  if (!child){
-	    //printf("the child here:%s\n", trunc_args);
-	    trunc_ary = toAry(trunc_args);
 	    execvp(trunc_ary[0], trunc_ary);
 	    return(0);
 	  }
