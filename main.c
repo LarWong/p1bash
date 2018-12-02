@@ -191,7 +191,7 @@ char *** sep_pipe_cmd(char ** items){
 
 }
 
-void pipe(char ***args)
+void pipes(char ***args)
 {
   int p[2];
   pid_t pid;
@@ -240,7 +240,7 @@ void cmd_check(char ** args){
     }
     if (state == 1 && sizeary(args) > 2){
       char *** cmd = sep_pipe_cmd(args);
-      pipe(cmd);
+      pipes(cmd);
     }
   } else{
     printf("hi");
