@@ -191,31 +191,31 @@ char *** sep_pipe_cmd(char ** items){
 
 }
 
-void    loop_pipe(char ***cmd)
+void pipe(char ***args)
 {
-  int   p[2];
+  int p[2];
   pid_t pid;
-  int   fd_in = 0;
+  int in = 0;
 
-  while (*cmd != NULL)
+  while (*args != NULL)
     {
       pipe(p);
-      int pid = fork();
+      pid = fork();
       if (pid == 0)
         {
-          dup2(fd_in, 0); //change the input according to the old one
-          if (*(cmd + 1) != NULL)
+          dup2(in, 0); //change the input according to the old one
+          if (*(args + 1) != NULL)
             dup2(p[1], 1);
           close(p[0]);
-          execvp((*cmd)[0], *cmd);
+          execvp((*args)[0], *args);
           exit(0);
         }
       else
         {
           wait(NULL);
           close(p[1]);
-          fd_in = p[0]; //save the input for the next command
-          cmd++;
+          in = p[0]; //save the input for the next command
+          args++;
         }
     }
 }
@@ -240,7 +240,7 @@ void cmd_check(char ** args){
     }
     if (state == 1 && sizeary(args) > 2){
       char *** cmd = sep_pipe_cmd(args);
-      loop_pipe(cmd);
+      pipe(cmd);
     }
   } else{
     printf("hi");
