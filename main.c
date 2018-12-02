@@ -33,23 +33,23 @@ char ** toAry(char * args){
 
 char * strip(char *s)
 {
-        size_t size;
-        char *end;
+  size_t size;
+  char *end;
 
-        size = strlen(s);
+  size = strlen(s);
 
-        if (!size)
-                return s;
+  if (!size)
+    return s;
 
-        end = s + size - 1;
-        while (end >= s && (*end == ' '))
-                end--;
-        *(end + 1) = '\0';
+  end = s + size - 1;
+  while (end >= s && (*end == ' '))
+    end--;
+  *(end + 1) = '\0';
 
-        while (*s && (*s == ' '))
-                s++;
+  while (*s && (*s == ' '))
+    s++;
 
-        return s;
+  return s;
 }
 
 int isEmpty(char * x){
@@ -88,8 +88,11 @@ int help(char ** ary, char * hey){
 int contains_ary(char ** ary, char ** hey){
   int state = 0;
   for (int i = 0; hey[i];i++){
-    state|=help(ary, hey[i]);
+    if (help(ary, hey[i])){
+      return i;
+    }
   }
+  return -1;
 }
 
 int sizeary(char ** x){
@@ -101,45 +104,45 @@ int sizeary(char ** x){
 }
 
 char *str_replace( char *s, const char *oldW, 
-                                 const char *newW) 
+		   const char *newW) 
 { 
   char * result = malloc(sizeof(char) * 9999); 
-    int i, cnt = 0; 
-    int newWlen = strlen(newW); 
-    int oldWlen = strlen(oldW); 
+  int i, cnt = 0; 
+  int newWlen = strlen(newW); 
+  int oldWlen = strlen(oldW); 
   
-    // Counting the number of times old word 
-    // occur in the string 
-    for (i = 0; s[i] != '\0'; i++) 
+  // Counting the number of times old word 
+  // occur in the string 
+  for (i = 0; s[i] != '\0'; i++) 
     { 
-        if (strstr(&s[i], oldW) == &s[i]) 
+      if (strstr(&s[i], oldW) == &s[i]) 
         { 
-            cnt++; 
+	  cnt++; 
   
-            // Jumping to index after the old word. 
-            i += oldWlen - 1; 
+	  // Jumping to index after the old word. 
+	  i += oldWlen - 1; 
         } 
     } 
   
-    // Making new string of enough length 
-    result = (char *)malloc(i + cnt * (newWlen - oldWlen) + 1); 
+  // Making new string of enough length 
+  result = (char *)malloc(i + cnt * (newWlen - oldWlen) + 1); 
   
-    i = 0; 
-    while (*s) 
+  i = 0; 
+  while (*s) 
     { 
-        // compare the substring with the result 
-        if (strstr(s, oldW) == s) 
+      // compare the substring with the result 
+      if (strstr(s, oldW) == s) 
         { 
-            strcpy(&result[i], newW); 
-            i += newWlen; 
-            s += oldWlen;
+	  strcpy(&result[i], newW); 
+	  i += newWlen; 
+	  s += oldWlen;
         } 
-        else
-            result[i++] = *s++; 
+      else
+	result[i++] = *s++; 
     } 
   
-    result[i] = '\0'; 
-    return result; 
+  result[i] = '\0'; 
+  return result; 
 } 
 
 char * remove_consec_ws(char * x){
@@ -151,11 +154,107 @@ char * remove_consec_ws(char * x){
   return new_str;
 }
 
+char ** subarr(int start, int  division, char ** args){
+  char ** items = args;
+  char ** sub = malloc(sizeof(char)*9000);
+  int x = 0;
+  int i = 0;
+  for(i = start; i < division; i++){
+    sub[x] = items[i];
+    x++;
+  }
+  sub[x] = NULL;
+  return sub;
+}
+
+
+char *** sep_pipe_cmd(char ** items){
+  char ** args = items;
+  char *** groups = malloc(sizeof(char**)*10);
+  int num_groups = 0;
+  int sep_start = 0;
+  int i = 0;
+  while(*items != NULL){
+    if(!strcmp(*items,"|")){
+      groups[num_groups] = subarr(sep_start,i,args);
+      sep_start = i + 1;
+      num_groups++;
+    }
+    i++;
+    items++;
+  }
+
+  groups[num_groups] = subarr(sep_start,sizeary(args),args);
+  groups[num_groups+1] = NULL;
+
+  return groups;
+
+}
+
+void    loop_pipe(char ***cmd)
+{
+  int   p[2];
+  pid_t pid;
+  int   fd_in = 0;
+
+  while (*cmd != NULL)
+    {
+      pipe(p);
+      int pid = fork();
+      if (pid == 0)
+        {
+          dup2(fd_in, 0); //change the input according to the old one
+          if (*(cmd + 1) != NULL)
+            dup2(p[1], 1);
+          close(p[0]);
+          execvp((*cmd)[0], *cmd);
+          exit(0);
+        }
+      else
+        {
+          wait(NULL);
+          close(p[1]);
+          fd_in = p[0]; //save the input for the next command
+          cmd++;
+        }
+    }
+}
+
+
+void cmd_check(char ** args){
+  char ** filters = malloc(sizeof(char*) * 999);
+  //add more filters here
+  filters[0] = "cd";
+  filters[1] = "|";
+  filters[2] = ">";
+  filters[3] = ">>";
+  filters[4] = "2>";
+  filters[5] = "<";
+  filters[6] = "<<";
+  filters[7] = "2<";
+  int state = contains_ary(args, filters);
+  if (state > -1){
+    //add more cases here
+    if (state == 0 && sizeary(args) > 1){
+      chdir(args[1]);
+    }
+    if (state == 1 && sizeary(args) > 2){
+      char *** cmd = sep_pipe_cmd(args);
+      loop_pipe(cmd);
+    }
+  } else{
+    printf("hi");
+    int child = fork();
+    if (!child){
+      execvp(args[0], args);
+    }
+  }
+}
+
 int main(int argc, char * argv[]){
-  //printf("hello\n");
   while (1){
-    pid_t wpid= 0;
-    int status = 0;
+    pid_t wpid = 0;
+    int status = 0; 
     char * str_args = calloc(sizeof(char), 9999);
     char cwd[PATH_MAX];
     getcwd(cwd,PATH_MAX);
@@ -163,63 +262,20 @@ int main(int argc, char * argv[]){
     fgets(str_args, 9999 + 1, stdin);
     str_args = remove_consec_ws(str_args);
     str_args[strcspn(str_args, "\n")] = '\0';
+    //printf("%s\n",str_args);
     while(str_args){
       char * trunc_args = strsep(&str_args, ";");
       if (!isEmpty(trunc_args)){
 	trunc_args = strip(trunc_args);
-	char ** trunc_ary;
-	char ** filters = malloc(sizeof(char*) * 999);
-
-	//add more filters here
-	filters[0] = "cd";
-	filters[1] = "|";
-	filters[2] = ">";
-	filters[3] = ">>";
-	filters[4] = "2>";
-	filters[5] = "<";
-	filters[6] = "<<";
-	filters[7] = "2<";
-	
-	trunc_ary = toAry(trunc_args);
-	if (contains_ary(trunc_ary, filters)){
-	  //add more cases here
-	  if (strcmp(trunc_ary[0], "cd") == 0 && sizeary(trunc_ary) > 1){
-	    chdir(trunc_ary[1]);
-	  }
-	  if (strcmp(trunc_ary[0], "|") == 0 && sizeary(trunc_ary) > 2){
-	    
-	  }
-	  if (strcmp(trunc_ary[0], ">") == 0 && sizeary(trunc_ary) > 2){
-	    
-	  }
-	  if (strcmp(trunc_ary[0], ">>") == 0 && sizeary(trunc_ary) > 2){
-	    
-	  }
-	  if (strcmp(trunc_ary[0], "2>") == 0 && sizeary(trunc_ary) > 2){
-	    
-	  }
-	  if (strcmp(trunc_ary[0], "<") == 0 && sizeary(trunc_ary) > 2){
-	    
-	  }
-	  if (strcmp(trunc_ary[0], "<<") == 0 && sizeary(trunc_ary) > 2){
-	    
-	  }
-	  if (strcmp(trunc_ary[0], "2<") == 0 && sizeary(trunc_ary) > 2){
-	    
-	  }
-	}
-	else{
-	  int child = fork();
-	  if (!child){
-	    execvp(trunc_ary[0], trunc_ary);
-	    return(0);
-	  }
-	  while ((wpid = wait(&status)) > 0);
-	}
       }
+      char ** trunc_ary;	
+      trunc_ary = toAry(trunc_args);
+      cmd_check(trunc_ary);	
+      while ((wpid = wait(&status)) > 0);
+	
     }
-    while ((wpid = wait(&status)) > 0);
   }
-  printf("done\n");
-   return 0;
+    //while ((wpid = wait(&status)) > 0);
+    printf("done\n");
+    return 0;
 }
