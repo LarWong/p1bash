@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include<sys/wait.h>
 #include <limits.h>
+#include<fcntl.h>
 
 void pary(char ** strings){
   for (int x = 0; strings[x]; x++){
@@ -134,7 +135,7 @@ char *str_replace( char *s, const char *oldW,
       if (strstr(s, oldW) == s) 
         { 
 	  strcpy(&result[i], newW); 
-	  i += newWlen; 
+      	  i += newWlen; 
 	  s += oldWlen;
         } 
       else
@@ -168,14 +169,14 @@ char ** subarr(int start, int  division, char ** args){
 }
 
 
-char *** sep_pipe_cmd(char ** items){
+char *** sep_symbol_cmd(char ** items,char * symbol){
   char ** args = items;
   char *** groups = malloc(sizeof(char**)*10);
   int num_groups = 0;
   int sep_start = 0;
   int i = 0;
   while(*items != NULL){
-    if(!strcmp(*items,"|")){
+    if(!strcmp(*items,symbol)){
       groups[num_groups] = subarr(sep_start,i,args);
       sep_start = i + 1;
       num_groups++;
@@ -196,14 +197,14 @@ void pipes(char ***args)
   int p[2];
   pid_t pid;
   int in = 0;
-
-  while (*args != NULL)
+  int status;
+  while (*args)
     {
       pipe(p);
       pid = fork();
       if (pid == 0)
         {
-          dup2(in, 0); //change the input according to the old one
+          dup2(in, 0);
           if (*(args + 1) != NULL)
             dup2(p[1], 1);
           close(p[0]);
@@ -212,14 +213,48 @@ void pipes(char ***args)
         }
       else
         {
-          wait(NULL);
+          wait(&status);
           close(p[1]);
-          in = p[0]; //save the input for the next command
+          in = p[0];
           args++;
         }
     }
 }
 
+void redirect_out(char *** cmds){
+  int f, status;
+  f = fork(); 
+  if (!f){
+    int fd = open(cmds[1][0], O_WRONLY | O_CREAT, 0777);
+    dup2(fd, 1);
+    execvp(cmds[0][0], cmds[0]);
+  }
+  else {
+    wait(&status);
+  }
+}
+
+void redirect_in(char *** cmds){
+  int f, status;
+  f = fork(); 
+  if (!f){
+    int fd = open(cmds[1][0], O_RDONLY);
+    dup2(fd,0);
+    char * str_args = malloc(sizeof(char)*100);;
+    while( fgets(cur, sizeof(char)*100, stdin)){
+      while(str_args){                                                                                                                                                               
+	char * trunc_args = strsep(&str_args, ";");                                                                                                                                              
+	if (!isEmpty(trunc_args)){                                                                                                                                                          
+	  trunc_args = strip(trunc_args);                                                                                                                             
+	}      
+	char ** trunc_ary;
+	trunc_ary = toAry(trunc_args);
+	cmd_check(trunc_ary);
+      }
+    }
+    wait(&status);
+  }
+}
 
 void cmd_check(char ** args){
   char ** filters = malloc(sizeof(char*) * 999);
@@ -232,15 +267,23 @@ void cmd_check(char ** args){
   filters[5] = "<";
   filters[6] = "<<";
   filters[7] = "2<";
+  filters[8] = "exit";
   int state = contains_ary(args, filters);
   if (state > -1){
     //add more cases here
     if (state == 0 && sizeary(args) > 1){
       chdir(args[1]);
     }
+    if (state == 8){
+      exit(0);
+    }
     if (state == 1 && sizeary(args) > 2){
-      char *** cmd = sep_pipe_cmd(args);
+      char *** cmd = sep_symbol_cmd(args,"|");
       pipes(cmd);
+    }
+    if (state == 2 && sizeary(args) > 2){
+      char *** cmd = sep_symbol_cmd(args,">");
+      redirect_out(cmd);
     }
   } else{
     printf("hi");
@@ -275,7 +318,7 @@ int main(int argc, char * argv[]){
 	
     }
   }
-    //while ((wpid = wait(&status)) > 0);
-    printf("done\n");
-    return 0;
+  //while ((wpid = wait(&status)) > 0);
+  printf("done\n");
+  return 0;
 }
