@@ -41,4 +41,4 @@
 
 * When the terminal window is made smaller (using mouse) and it causes the text in the terminal to move, user cannot backspace anymore 9even when window is restored to the original size.
 
-## Files and Function Headers:
+## Function Headers:
