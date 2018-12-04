@@ -41,7 +41,7 @@
 
 * Commands need to be separated by spaces (```ls | wc``` works, but ```ls|wc``` does not)
 
-* When the terminal window is made smaller (using mouse) and it causes the text in the terminal to move, user cannot backspace anymore 9even when window is restored to the original size.
+* When the terminal window is made smaller (using mouse) and it causes the text in the terminal to move, user cannot backspace anymore, even when window is restored to the original size.
 
 * Functional, but leaks memory
 
