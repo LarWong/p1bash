@@ -17,6 +17,8 @@
 
 * Can change directories
 
+* Can exit wiht ```exit``` command
+
 * Catches ```Ctrl-C```
 
 ## Attempted but Failed:
