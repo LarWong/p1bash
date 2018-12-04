@@ -11,17 +11,64 @@
 #include <fcntl.h>
 #include <errno.h>
 
+//Args: int signal_number
+//Return: void
+//Description: takes care of how the program deals with signals
 void signal_handler(int sig);
+
+//Args: char** string_array
+//Return: void
+//Description: prints an array of strings
 void pary(char ** strings);
+
+//Args: char** string_array
+//Return: char * long_string
+//Description: converts a string array to a single string of all elements
 char * toString(char ** args);
+
+//Args: char * long_string
+//Return: char** string_array
+//Description: splits a long string by spaces and converts it into an array of each substring
 char ** toAry(char * args);
+
+//Args: char * string
+//Return: char * stripped_string
+//Description: strips a string of leading and trailing whitespace
 char * strip(char *s);
+
+//Args: char * string
+//Return: int boolean
+//Description: return if the string is only spaces
 int isEmpty(char * x);
+
+//Args: char * string, char * sub_string
+//Return: int boolean
+//Description: return whether the sub_string is in the string
 int contains(char * str, char * sub);
+
+//Args: char ** str_ary, char * str
+//Return: int boolean
+//Description: return whether the string is in the array
 int help(char ** ary, char * hey);
+
+//Args: char ** ary, char ** matching_array
+//Return: int boolean
+//Description: return index where array elements match, -1 if they never match
 int contains_ary(char ** ary, char ** hey);
+
+//Args: char ** array_strings
+//Return: int len
+//Description: returns size of array of strings
 int sizeary(char ** x);
+
+//Args: char* original_str, char* target, char* replace
+//Return:
+//Description: replaces substrings in the original string with the replace string
 char *str_replace( char *s, const char *oldW, const char *newW);
+
+//Args: char* string
+//Return: char* filtered_string
+//Description: removes consecutive whitespace in a string
 char * remove_consec_ws(char * x);
 
 //Args: int start,int end,char** mainarr
